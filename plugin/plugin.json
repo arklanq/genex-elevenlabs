@@ -5,6 +5,7 @@
   "name": "ElevenLabs",
   "publisher": "Arek Nurzyński",
   "description": "Make voices, sound effects and music with your own ElevenLabs API key and plan, not Genex credits.",
+  "icon": "icon.svg",
   "backend": "backend.mjs",
   "capabilities": ["credentials", "network", "jobs", "project.write"],
   "network": {
