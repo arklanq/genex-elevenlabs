@@ -1,0 +1,110 @@
+{
+  "apiVersion": 3,
+  "id": "elevenlabs",
+  "version": "0.1.0",
+  "name": "ElevenLabs",
+  "publisher": "Arek Nurzyński",
+  "description": "Make voices, sound effects and music with your own ElevenLabs API key and plan, not Genex credits.",
+  "backend": "backend.mjs",
+  "capabilities": ["credentials", "network", "jobs", "project.write"],
+  "network": {
+    "hosts": ["api.elevenlabs.io"]
+  },
+  "tools": [
+    {
+      "name": "status",
+      "description": "Read the ElevenLabs account state, the plan's credit use and the recent ElevenLabs files for this game. Free; spends nothing.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "voices",
+      "description": "Search the voices this ElevenLabs account can use, by name or description. Free. Returns voiceId, name, category and labels; pass a voiceId to elevenlabs__generate for speech.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "generate",
+      "description": "Make one audio file with the user's own ElevenLabs plan and copy it into the game. Operations: speech (needs text and voice, a voiceId from elevenlabs__voices), sfx (needs prompt; options.duration_seconds 0.5-30, options.loop), music (needs prompt; options.music_length_ms 3000-600000, options.force_instrumental). name is the file name without extension. options holds other ElevenLabs API fields such as model_id, voice_settings, language_code, seed, prompt_influence and output_format (mp3_*, wav_* or opus_*; default mp3_44100_128). Returns the delivered file path.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "The words to speak, for speech."
+          },
+          "voice": {
+            "type": "string",
+            "description": "The voiceId to speak with, for speech."
+          },
+          "prompt": {
+            "type": "string",
+            "description": "What the sound effect or the music should be, for sfx and music."
+          },
+          "name": {
+            "type": "string",
+            "description": "File name without extension: lowercase letters, digits and dashes."
+          },
+          "options": {
+            "type": "object",
+            "description": "Extra ElevenLabs API fields as an object; text and prompt are set by the plugin.",
+            "acceptJsonString": true
+          }
+        },
+        "required": ["operation"]
+      },
+      "confirmation": "Make an audio file with your own ElevenLabs API key. ElevenLabs charges your ElevenLabs plan."
+    }
+  ],
+  "skills": [
+    {
+      "name": "elevenlabs",
+      "text": "ElevenLabs makes speech, sound effects and music with the user's own ElevenLabs API key and plan. Call elevenlabs__status first; when connected is false, tell the user once to press Connect on the ElevenLabs plugin and paste a key, and do not block other work. For speech, pick a voice with elevenlabs__voices and pass its voiceId. Use elevenlabs__generate only for audio the game really needs, keep sound effects short and give each file a clear name. Every call asks the user first; a declined or expired request must not be repeated unless the user asks again. A failed call never needs a retry just in case: read its error first. Load the exact returned file in the game and check that it plays. Respect explicit user choices such as Genex credits or no generated audio; never switch between paid services silently."
+    }
+  ],
+  "panels": [
+    {
+      "id": "account",
+      "title": "ElevenLabs",
+      "file": "panel.html",
+      "placement": "settings"
+    }
+  ],
+  "settings": [],
+  "actions": [
+    {
+      "name": "status",
+      "label": "Account and files"
+    },
+    {
+      "name": "unlock",
+      "label": "Unlock saved ElevenLabs key"
+    },
+    {
+      "name": "connect",
+      "label": "Connect ElevenLabs"
+    },
+    {
+      "name": "disconnect",
+      "label": "Disconnect ElevenLabs",
+      "confirmation": "Remove the saved ElevenLabs API key from Studio. Files already in your games stay."
+    }
+  ],
+  "account": {
+    "connect": "connect",
+    "unlock": "unlock",
+    "disconnect": "disconnect",
+    "status": "status"
+  }
+}
