@@ -99,19 +99,6 @@ input::placeholder { color: var(--ink-3); }
 .stat dt { color: var(--ink-3); font-size: 13px; line-height: 18px; }
 .note { margin-block-start: 12px; color: var(--ink-3); font-size: 13px; line-height: 18px; text-wrap: pretty; }
 .error { margin-block-start: 12px; color: var(--red); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
-h3 { margin: 28px 0 8px; font-size: 15px; font-weight: 500; line-height: 22px; }
-.jobs { list-style: none; padding: 0; }
-.job {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 16px;
-  padding: 12px 0;
-  border-block-start: 1px solid var(--line);
-}
-.job:first-child { border-block-start: 0; }
-.job strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.job time { color: var(--ink-3); font-size: 13px; }
-.job code { grid-column: 1 / -1; color: var(--ink-3); font: 12px / 18px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { button { transition: none; } }
 @media (max-width: 420px) { .card { padding: 16px; } }
 </style>
@@ -132,11 +119,6 @@ h3 { margin: 28px 0 8px; font-size: 15px; font-weight: 500; line-height: 22px; }
   <dl class="stats" id="stats" hidden></dl>
   <p class="note" id="note"></p>
   <p class="error" id="error" role="alert"></p>
-</section>
-
-<section id="recent" hidden>
-  <h3 id="recent-title"></h3>
-  <ul class="jobs" id="jobs"></ul>
 </section>
 
 <script>// Include this in a prebuilt panel. No credential values or arbitrary IPC are exposed.
@@ -242,7 +224,6 @@ const WORDS = {
   disconnect: "Disconnect",
   useSaved: "Use saved key",
   noSavedKey: "No saved key yet. Paste one above.",
-  recent: "Recent files",
 };
 const capitalize = (value) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
 const STATS = (state) => [
@@ -253,8 +234,6 @@ const NOTE = (state) =>
   state.resetsAt
     ? `Credits reset on ${DATE.format(new Date(state.resetsAt))}. Audio is paid from your ElevenLabs plan.`
     : "Audio is paid from your ElevenLabs plan, not Genex credits.";
-const JOB_TITLE = (job) => job.text || job.operation;
-const JOB_DETAIL = (job) => (job.files ?? [])[0] ?? job.operation;
 
 const $ = (id) => document.getElementById(id);
 const call = (name, args) => window.studioPlugin.call("action", name, args ?? {});
@@ -286,8 +265,6 @@ async function applyTheme() {
   } catch {}
 }
 
-const text = (value) => document.createTextNode(String(value ?? ""));
-
 function stat(label, value) {
   const wrap = document.createElement("div");
   wrap.className = "stat";
@@ -318,27 +295,6 @@ function renderAccount(state) {
   showError(state.error);
 }
 
-function renderJobs(jobs) {
-  $("recent").hidden = jobs.length === 0;
-  $("jobs").replaceChildren(
-    ...jobs.map((job) => {
-      const item = document.createElement("li");
-      item.className = "job";
-      const title = document.createElement("strong");
-      title.append(text(JOB_TITLE(job)));
-      title.title = title.textContent;
-      const time = document.createElement("time");
-      time.dateTime = job.createdAt;
-      time.textContent = DATE.format(new Date(job.createdAt));
-      const detail = document.createElement("code");
-      detail.textContent = JOB_DETAIL(job);
-      detail.title = detail.textContent;
-      item.append(title, time, detail);
-      return item;
-    }),
-  );
-}
-
 // Ignore answers that arrive after a newer refresh started.
 async function refresh() {
   const mine = ++generation;
@@ -346,7 +302,6 @@ async function refresh() {
     const state = await call("status");
     if (mine !== generation) return;
     renderAccount(state);
-    renderJobs(state.jobs ?? []);
   } catch (error) {
     if (mine === generation) showError(error);
   }
@@ -372,7 +327,6 @@ $("key").placeholder = WORDS.placeholder;
 $("key").setAttribute("aria-label", WORDS.keyLabel);
 $("disconnect").textContent = WORDS.disconnect;
 $("unlock").textContent = WORDS.useSaved;
-$("recent-title").textContent = WORDS.recent;
 
 $("save").onclick = () =>
   run($("save"), async () => {
