@@ -6,6 +6,8 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 const API = "https://api.elevenlabs.io";
 /** How long one generation may take; Studio ends a plugin call after 190 s. */
 const CALL_TIMEOUT_MS = 180_000;
+/** How long a free read (plan, voices) may take, under the panel's 60 s wait. */
+const READ_TIMEOUT_MS = 30_000;
 /** The largest audio file the plugin accepts. */
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 /** How many voices one search returns, and how many recent files the index keeps. */
@@ -93,8 +95,12 @@ async function elevenlabs(key, route, init = {}) {
   throw new ElevenLabsError(response.status, body?.detail ?? response.statusText);
 }
 
-/** @param {string} key @param {string} route */
-const getJson = async (key, route) => (await elevenlabs(key, route)).json();
+/**
+ * A free read that ends with the turn or after READ_TIMEOUT_MS.
+ * @param {string} key @param {string} route @param {AbortSignal} signal
+ */
+const getJson = async (key, route, signal) =>
+  (await elevenlabs(key, route, { signal: AbortSignal.any([signal, AbortSignal.timeout(READ_TIMEOUT_MS)]) })).json();
 
 /**
  * Normalize `options`, which may arrive as an object or as legacy JSON text.
@@ -211,11 +217,12 @@ async function generate(ctx, key, args) {
  * Search the account's voices.
  * @param {string} key
  * @param {unknown} search
+ * @param {AbortSignal} signal
  */
-async function voices(key, search) {
+async function voices(key, search, signal) {
   const query = new URLSearchParams({ page_size: String(VOICE_PAGE) });
   if (search) query.set("search", String(search));
-  const data = await getJson(key, `/v2/voices?${query}`);
+  const data = await getJson(key, `/v2/voices?${query}`, signal);
   return (data.voices ?? []).map((v) => ({
     voiceId: v.voice_id,
     name: v.name,
@@ -225,10 +232,13 @@ async function voices(key, search) {
   }));
 }
 
-/** The plan's credit use, or a note when the key cannot read it. @param {string} key */
-async function plan(key) {
+/**
+ * The plan's credit use, or a note when the key cannot read it.
+ * @param {string} key @param {AbortSignal} signal
+ */
+async function plan(key, signal) {
   try {
-    const s = await getJson(key, "/v1/user/subscription");
+    const s = await getJson(key, "/v1/user/subscription", signal);
     return {
       tier: s.tier,
       used: s.character_count,
@@ -252,7 +262,7 @@ async function status(ctx) {
   const index = /** @type {any[]} */ ((await ctx.host("jobs.read", { id: INDEX_ID })) ?? []);
   const jobs = index.filter((job) => !ctx.project || job.project === ctx.project).slice(0, 10);
   if (!key) return { connected: false, message: MESSAGE.Locked, jobs };
-  return { connected: true, keyHint: key.slice(-KEY_HINT_CHARS), ...(await plan(key)), jobs };
+  return { connected: true, keyHint: key.slice(-KEY_HINT_CHARS), ...(await plan(key, ctx.signal)), jobs };
 }
 
 /** @type {Record<string, (args: Record<string, any>, ctx: import('./plugin-sdk/index.d.ts').PluginContext) => Promise<unknown>>} */
@@ -268,7 +278,7 @@ const ACTIONS = {
       return saved ? { connected: true } : { connected: false, needsKey: true };
     }
     const token = args.token.trim();
-    const answer = await plan(token);
+    const answer = await plan(token, ctx.signal);
     if (answer.error) throw new Error(answer.error);
     await ctx.host("credentials.write", { token });
     return { connected: true, ...answer };
@@ -284,7 +294,7 @@ export const activate = async () => ({
   async tool(name, args, ctx) {
     if (name === "status") return status(ctx);
     const key = await sessionKey(ctx);
-    if (name === "voices") return voices(key, args.search);
+    if (name === "voices") return voices(key, args.search, ctx.signal);
     if (!ctx.project || !ctx.directory) throw new Error(MESSAGE.ProjectRequired);
     return generate(ctx, key, args);
   },

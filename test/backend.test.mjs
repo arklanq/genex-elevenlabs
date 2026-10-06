@@ -47,13 +47,14 @@ function fakeHost(root, game, key = "sk_test") {
 }
 
 /**
- * Route fetch to canned ElevenLabs answers. Like real fetch, it follows a `redirect` to its
- * target, keeping the headers, unless the call asked to refuse redirects.
+ * Route fetch to canned ElevenLabs answers. Like real fetch, it stops on an aborted signal and
+ * follows a `redirect` to its target, keeping the headers, unless the call asked to refuse redirects.
  */
 function fakeElevenLabs({ subscription = { status: 200 }, redirect } = {}) {
   const requests = [];
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
+    if (init.signal?.aborted) throw init.signal.reason;
     requests.push({ url, method: init.method ?? "GET", body: init.body && JSON.parse(init.body), key: init.headers?.["xi-api-key"] });
     if (redirect) {
       if (init.redirect === "error") throw new TypeError("fetch failed");
@@ -230,4 +231,15 @@ test("a key with characters a header cannot carry is refused without echoing it"
   }
   assert.equal(requests.length, 0);
   assert.equal(state.saved, null);
+});
+
+test("stopping the turn ends the free calls too", async () => {
+  fakeElevenLabs();
+  const { ctx } = fakeHost(root, game);
+  const stop = new AbortController();
+  stop.abort();
+  const stopped = { ...ctx, signal: stop.signal };
+  const plugin = await activate(/** @type {any} */ ({}));
+  await assert.rejects(plugin.tool("voices", {}, stopped), { name: "AbortError" });
+  assert.match((await plugin.tool("status", {}, stopped)).error, /abort/i);
 });
