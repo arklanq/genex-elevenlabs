@@ -12,6 +12,8 @@ const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const VOICE_PAGE = 20;
 const INDEX_SIZE = 50;
 const INDEX_ID = "index";
+/** How much of the key's end the panel shows, so the user can tell keys apart. */
+const KEY_HINT_CHARS = 4;
 const DEFAULT_FORMAT = "mp3_44100_128";
 /** Formats a browser game can play, by codec prefix, with their file extension. */
 const FORMAT_EXTENSIONS = { mp3: ".mp3", wav: ".wav", opus: ".opus" };
@@ -243,7 +245,7 @@ async function status(ctx) {
   const index = /** @type {any[]} */ ((await ctx.host("jobs.read", { id: INDEX_ID })) ?? []);
   const jobs = index.filter((job) => !ctx.project || job.project === ctx.project).slice(0, 10);
   if (!key) return { connected: false, message: MESSAGE.Locked, jobs };
-  return { connected: true, ...(await plan(key)), jobs };
+  return { connected: true, keyHint: key.slice(-KEY_HINT_CHARS), ...(await plan(key)), jobs };
 }
 
 /** @type {Record<string, (args: Record<string, any>, ctx: import('./plugin-sdk/index.d.ts').PluginContext) => Promise<unknown>>} */

@@ -180,3 +180,12 @@ test("a valid key without permission to read the plan is still saved", async () 
   assert.match(answer.note, /cannot read the plan/);
   assert.equal(state.saved, "sk_scoped");
 });
+
+test("status shows only the key's last four characters", async () => {
+  fakeElevenLabs();
+  const { ctx } = fakeHost(root, game, "sk_secreta81d");
+  const plugin = await activate(/** @type {any} */ ({}));
+  const state = await plugin.tool("status", {}, ctx);
+  assert.equal(state.keyHint, "a81d");
+  assert.doesNotMatch(JSON.stringify(state), /secret/);
+});
