@@ -14,7 +14,7 @@ Files are copied into the game under `assets/elevenlabs/<id>/<name>.mp3` (`publi
 
 ## Install
 
-1. In Genex: **Plugins → Add → Load local plugin…** and choose the `plugin/` folder.
+1. In Genex: **Plugins → Add → Install from GitHub** and paste `https://github.com/arklanq/genex-elevenlabs`. Studio installs the latest release. To install by hand instead, download `elevenlabs-<version>.zip` from [Releases](https://github.com/arklanq/genex-elevenlabs/releases), unpack it and choose its folder with **Plugins → Add → Load local plugin…**.
 2. Press **Connect** on the ElevenLabs row, paste your key from elevenlabs.io (Developers → API Keys) and press **Save key**. The plugin checks the key with ElevenLabs before Studio saves it. A key restricted so it cannot read the plan is still accepted; the panel then shows no credit use.
 3. Studio unlocks the saved key again after a restart. If the panel asks for a key instead, press **Use saved key**.
 
@@ -35,3 +35,13 @@ Check the package with Genex's doctor from a genex-desktop checkout:
 ```bash
 npm run plugin:doctor -- /path/to/genex-elevenlabs/plugin
 ```
+
+## Release
+
+Bump `version` in `plugin/plugin.json` and `package.json`, commit, then push a matching tag:
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+The Release workflow runs the tests and publishes a GitHub release with `elevenlabs-<version>.zip` attached.
