@@ -46,12 +46,20 @@ function fakeHost(root, game, key = "sk_test") {
   return { ctx, jobs, state };
 }
 
-/** Route fetch to canned ElevenLabs answers. */
-function fakeElevenLabs({ subscription = { status: 200 } } = {}) {
+/**
+ * Route fetch to canned ElevenLabs answers. Like real fetch, it follows a `redirect` to its
+ * target, keeping the headers, unless the call asked to refuse redirects.
+ */
+function fakeElevenLabs({ subscription = { status: 200 }, redirect } = {}) {
   const requests = [];
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
     requests.push({ url, method: init.method ?? "GET", body: init.body && JSON.parse(init.body), key: init.headers?.["xi-api-key"] });
+    if (redirect) {
+      if (init.redirect === "error") throw new TypeError("fetch failed");
+      requests.push({ url: new URL(redirect), method: init.method ?? "GET", key: init.headers?.["xi-api-key"] });
+      return Response.json({});
+    }
     if (url.pathname === "/v1/user/subscription") {
       if (subscription.status !== 200)
         return new Response(JSON.stringify({ detail: subscription.detail }), { status: subscription.status });
@@ -188,4 +196,23 @@ test("status shows only the key's last four characters", async () => {
   const state = await plugin.tool("status", {}, ctx);
   assert.equal(state.keyHint, "a81d");
   assert.doesNotMatch(JSON.stringify(state), /secret/);
+});
+
+test("a redirect never carries the key to another host", async () => {
+  const { ctx } = fakeHost(root, game);
+  const plugin = await activate(/** @type {any} */ ({}));
+  const calls = [
+    () => plugin.tool("voices", {}, ctx),
+    () => plugin.tool("generate", { operation: "sfx", prompt: "x" }, ctx),
+    () => plugin.action("connect", { token: "sk_new" }, ctx),
+  ];
+  for (const call of calls) {
+    const requests = fakeElevenLabs({ redirect: "https://evil.example/steal" });
+    await assert.rejects(call());
+    assert.deepEqual(
+      requests.filter((r) => r.url.host !== "api.elevenlabs.io"),
+      [],
+      "nothing reached the redirect target",
+    );
+  }
 });

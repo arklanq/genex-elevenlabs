@@ -80,6 +80,8 @@ async function elevenlabs(key, route, init = {}) {
   const response = await fetch(`${API}${route}`, {
     ...init,
     headers: { "xi-api-key": key, ...init.headers },
+    // A redirect would carry the key header to whatever host it names.
+    redirect: "error",
   });
   if (response.ok) return response;
   const body = await response.json().catch(() => null);
