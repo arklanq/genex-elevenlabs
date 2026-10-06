@@ -1,0 +1,183 @@
+<!doctype html><meta charset="utf-8">
+<style>
+:root{--bg:#17191c;--fg:#eee;--muted:#9aa0a6;--line:#3a3f44;--accent:#6aa9ff}
+body{font:14px system-ui;background:var(--bg);color:var(--fg);padding:18px;margin:0}
+h2{margin:0 0 12px}
+p{margin:6px 0}
+.muted{color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+input{flex:1;min-width:220px;padding:8px;background:#26292d;color:var(--fg);border:1px solid var(--line);border-radius:6px}
+button{padding:8px 12px;background:#303438;color:var(--fg);border:1px solid var(--line);border-radius:6px;cursor:pointer;min-height:36px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#0b1220}
+[role=alert]{color:#ff8a80}
+article{border-top:1px solid var(--line);padding:10px 0}
+</style>
+<h2>ElevenLabs</h2>
+<p class="muted">Uses your own ElevenLabs API key and plan. Create a key at elevenlabs.io → Developers → API Keys.</p>
+<section id="account"></section>
+<div class="row" id="key-row">
+  <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk_…" aria-label="ElevenLabs API key">
+  <button class="primary" id="save">Save key</button>
+</div>
+<div class="row"><button id="refresh">Refresh</button><button id="disconnect">Disconnect</button></div>
+<p id="error" role="alert"></p>
+<h3>Recent files</h3>
+<section id="jobs"><p class="muted">No files yet.</p></section>
+<script>// Include this in a prebuilt panel. No credential values or arbitrary IPC are exposed.
+const waiting = new Map();
+const contextListeners = new Set();
+let seq = 0;
+window.addEventListener("message", (event) => {
+  if (event.source !== parent) return;
+  if (event.data?.type === "studio-plugin-context-changed") {
+    for (const listener of contextListeners) {
+      try {
+        listener();
+      } catch {}
+    }
+    return;
+  }
+  if (event.data?.type !== "studio-plugin-result") return;
+  const p = waiting.get(event.data.id);
+  if (!p) return;
+  waiting.delete(event.data.id);
+  clearTimeout(p.timer);
+  event.data.error ? p.reject(new Error(event.data.error)) : p.resolve(event.data.result);
+});
+window.studioPlugin = {
+  onContextChanged(callback) {
+    contextListeners.add(callback);
+    return () => contextListeners.delete(callback);
+  },
+  call(method, name, args, options) {
+    // A long setup action may extend its local wait; host validation, confirmations and
+    // execution deadlines still apply. Timing out never means a remote job was cancelled.
+    const timeoutMs = options?.timeoutMs ?? 60000;
+    if (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > 1800000)
+      return Promise.reject(new Error("Invalid panel wait duration"));
+    const id = String(++seq);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        waiting.delete(id);
+        reject(new Error("Studio request timed out. Inspect its status before retrying."));
+      }, timeoutMs);
+      waiting.set(id, { resolve, reject, timer });
+      parent.postMessage({ type: "studio-plugin-request", id, method, name, args }, "*");
+    });
+  },
+};
+window.addEventListener("pagehide", () => {
+  for (const p of waiting.values()) {
+    clearTimeout(p.timer);
+    p.reject(new Error("Panel closed"));
+  }
+  waiting.clear();
+});
+
+/** Small framework-free SDK primitives; custom panels can also use their own framework. */
+window.studioPlugin.ui = {
+  text(tag, value) {
+    const el = document.createElement(tag);
+    el.textContent = String(value ?? "Unknown");
+    return el;
+  },
+  status(label, value) {
+    const row = document.createElement("p");
+    const title = document.createElement("strong");
+    title.textContent = label + ": ";
+    row.append(title, document.createTextNode(String(value ?? "Unknown")));
+    return row;
+  },
+  error(message) {
+    const el = document.createElement("p");
+    el.setAttribute("role", "alert");
+    el.textContent = String(message);
+    return el;
+  },
+  job(job) {
+    const card = document.createElement("article");
+    card.style.cssText = "border-top:1px solid #555;padding:12px 0";
+    card.append(
+      this.text("strong", job.operation ?? job.title ?? "Asset job"),
+      this.status("Status", job.status),
+      this.status("Use", job.use?.stage ?? "Not verified"),
+      this.status("Charged credits", job.creditsCharged ?? "Not reported"),
+      this.status("Refunded credits", job.creditsRefunded ?? "Not reported"),
+    );
+    if (job.generationId) card.append(this.status("Generation", job.generationId));
+    for (const file of job.files ?? []) card.append(this.text("div", file));
+    if (job.error) card.append(this.error(job.error));
+    return card;
+  },
+};
+</script>
+<script>
+const $ = (id) => document.getElementById(id);
+const ui = window.studioPlugin.ui;
+const call = (name, args) => window.studioPlugin.call("action", name, args ?? {});
+let generation = 0;
+
+function showError(error) {
+  $("error").textContent = error ? String(error.message ?? error) : "";
+}
+
+function render(state) {
+  const account = $("account");
+  account.replaceChildren(ui.status("Account", state.connected ? "Connected" : "Not connected"));
+  if (state.tier) account.append(ui.status("Plan", state.tier));
+  if (state.limit !== undefined) account.append(ui.status("Credits used", `${state.used} / ${state.limit}`));
+  if (state.resetsAt) account.append(ui.status("Resets", state.resetsAt));
+  if (state.note) account.append(ui.text("p", state.note));
+  if (state.error) account.append(ui.error(state.error));
+  $("disconnect").hidden = !state.connected;
+  const jobs = state.jobs ?? [];
+  if (!jobs.length) return;
+  $("jobs").replaceChildren(
+    ...jobs.map((job) => {
+      const card = document.createElement("article");
+      card.append(ui.text("strong", job.operation), ui.status("Created", job.createdAt));
+      if (job.text) card.append(ui.status("Text", job.text));
+      for (const file of job.files ?? []) card.append(ui.text("div", file));
+      return card;
+    }),
+  );
+}
+
+// Ignore answers that arrive after a newer refresh started.
+async function refresh() {
+  const mine = ++generation;
+  try {
+    const state = await call("status");
+    if (mine === generation) {
+      render(state);
+      showError("");
+    }
+  } catch (error) {
+    if (mine === generation) showError(error);
+  }
+}
+
+$("save").onclick = async () => {
+  const token = $("key").value.trim();
+  if (!token) return showError("Paste your ElevenLabs API key first.");
+  try {
+    await call("connect", { token });
+    $("key").value = "";
+    await refresh();
+  } catch (error) {
+    showError(error);
+  }
+};
+$("refresh").onclick = refresh;
+$("disconnect").onclick = async () => {
+  try {
+    await call("disconnect");
+    await refresh();
+  } catch (error) {
+    showError(error);
+  }
+};
+const stop = window.studioPlugin.onContextChanged(refresh);
+window.addEventListener("pagehide", stop);
+refresh();
+</script>
