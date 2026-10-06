@@ -268,6 +268,8 @@ const NUMBER = new Intl.NumberFormat();
 const DATE = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 let generation = 0;
 let busy = false;
+// Studio announces every account action, and the refresh that follows must not wipe the action's error.
+let actionError;
 
 /** Readable label colour on the accent: dark text on a light accent, white otherwise. */
 function labelOn(color) {
@@ -322,7 +324,7 @@ function renderAccount(state) {
   $("stats").replaceChildren(...stats.map(([label, value]) => stat(label, value)));
   $("stats").hidden = stats.length === 0;
   $("note").textContent = connected ? (state.note ?? NOTE(state)) : WORDS.keyHelp;
-  showError(state.error);
+  showError(state.error ?? actionError);
 }
 
 // Ignore answers that arrive after a newer refresh started.
@@ -349,10 +351,12 @@ async function run(button, work) {
   if (busy) return;
   busy = true;
   button.disabled = true;
+  actionError = undefined;
   showError("");
   try {
     await work();
   } catch (error) {
+    actionError = error;
     showError(error);
   } finally {
     busy = false;
