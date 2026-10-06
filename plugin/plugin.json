@@ -1,7 +1,7 @@
 {
   "apiVersion": 3,
   "id": "elevenlabs",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "ElevenLabs",
   "publisher": "Arek Nurzyński",
   "description": "Make voices, sound effects and music with your own ElevenLabs API key and plan, not Genex credits.",
