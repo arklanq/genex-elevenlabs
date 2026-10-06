@@ -1,28 +1,144 @@
-<!doctype html><meta charset="utf-8">
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{--bg:#17191c;--fg:#eee;--muted:#9aa0a6;--line:#3a3f44;--accent:#6aa9ff}
-body{font:14px system-ui;background:var(--bg);color:var(--fg);padding:18px;margin:0}
-h2{margin:0 0 12px}
-p{margin:6px 0}
-.muted{color:var(--muted)}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-input{flex:1;min-width:220px;padding:8px;background:#26292d;color:var(--fg);border:1px solid var(--line);border-radius:6px}
-button{padding:8px 12px;background:#303438;color:var(--fg);border:1px solid var(--line);border-radius:6px;cursor:pointer;min-height:36px}
-button.primary{background:var(--accent);border-color:var(--accent);color:#0b1220}
-[role=alert]{color:#ff8a80}
-article{border-top:1px solid var(--line);padding:10px 0}
+/* Studio sends only its background, text and accent colours; every other tone is mixed from them. */
+:root {
+  --background: #0e0d0f;
+  --foreground: #dee0e2;
+  --accent: #3c44c4;
+  --accent-foreground: #ffffff;
+  --surface: color-mix(in oklab, var(--foreground) 3%, var(--background));
+  --field: color-mix(in oklab, var(--foreground) 6%, var(--background));
+  --hover: color-mix(in oklab, var(--foreground) 10%, var(--background));
+  --line: color-mix(in oklab, var(--foreground) 9%, var(--background));
+  --ink-3: color-mix(in oklab, var(--foreground) 66%, var(--background));
+  --green: #7cd194;
+  --orange: #efbe72;
+  --red: #f08287;
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  padding: 4px 2px 24px;
+  background: var(--background);
+  color: var(--foreground);
+  font: 14px / 20px var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+.card {
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+}
+.copy { display: flex; flex: 1 1 280px; min-width: 0; flex-direction: column; gap: 4px; }
+h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; line-height: 22px; }
+.muted { color: var(--ink-3); text-wrap: pretty; overflow-wrap: anywhere; }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 14%, transparent);
+}
+.dot[data-tone="warn"] { background: var(--orange); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 14%, transparent); }
+button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--foreground);
+  font: 14px / 20px var(--mono);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms, transform 120ms;
+}
+button:hover:enabled { background: var(--hover); }
+button:active:enabled { transform: scale(0.96); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-foreground); }
+button.primary:hover:enabled { background: color-mix(in oklab, var(--accent) 88%, var(--foreground)); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.key { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 16px; }
+input {
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--field);
+  color: var(--foreground);
+  font: 14px / 20px var(--mono);
+}
+input::placeholder { color: var(--ink-3); }
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 48px;
+  margin-block-start: 20px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--line);
+}
+.stat { display: flex; flex-direction: column-reverse; gap: 2px; }
+.stat dd { font-size: 24px; font-weight: 500; line-height: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat dt { color: var(--ink-3); font-size: 13px; line-height: 18px; }
+.note { margin-block-start: 12px; color: var(--ink-3); font-size: 13px; line-height: 18px; text-wrap: pretty; }
+.error { margin-block-start: 12px; color: var(--red); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
+h3 { margin: 28px 0 8px; font-size: 15px; font-weight: 500; line-height: 22px; }
+.jobs { list-style: none; padding: 0; }
+.job {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 16px;
+  padding: 12px 0;
+  border-block-start: 1px solid var(--line);
+}
+.job:first-child { border-block-start: 0; }
+.job strong { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.job time { color: var(--ink-3); font-size: 13px; }
+.job code { grid-column: 1 / -1; color: var(--ink-3); font: 12px / 18px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+@media (max-width: 420px) { .card { padding: 16px; } }
 </style>
-<h2>ElevenLabs</h2>
-<p class="muted">Uses your own ElevenLabs API key and plan. Create a key at elevenlabs.io → Developers → API Keys.</p>
-<section id="account"></section>
-<div class="row" id="key-row">
-  <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="sk_…" aria-label="ElevenLabs API key">
-  <button class="primary" id="save">Save key</button>
-</div>
-<div class="row"><button id="refresh">Refresh</button><button id="disconnect">Disconnect</button></div>
-<p id="error" role="alert"></p>
-<h3>Recent files</h3>
-<section id="jobs"><p class="muted">No files yet.</p></section>
+
+<section class="card" aria-live="polite" aria-labelledby="title">
+  <div class="row">
+    <div class="copy">
+      <h2 id="title"><span class="dot" id="dot" hidden></span><span id="heading">Checking…</span></h2>
+      <p class="muted" id="subtitle"></p>
+    </div>
+    <button id="disconnect" hidden></button>
+  </div>
+  <div class="key" id="key-form" hidden>
+    <input id="key" type="password" autocomplete="off" spellcheck="false">
+    <button class="primary" id="save">Save key</button>
+    <button id="unlock"></button>
+  </div>
+  <dl class="stats" id="stats" hidden></dl>
+  <p class="note" id="note"></p>
+  <p class="error" id="error" role="alert"></p>
+</section>
+
+<section id="recent" hidden>
+  <h3 id="recent-title"></h3>
+  <ul class="jobs" id="jobs"></ul>
+</section>
+
 <script>// Include this in a prebuilt panel. No credential values or arbitrary IPC are exposed.
 const waiting = new Map();
 const contextListeners = new Set();
@@ -112,33 +228,113 @@ window.studioPlugin.ui = {
 };
 </script>
 <script>
+const count = (value) => (typeof value === "number" ? NUMBER.format(value) : undefined);
+const WORDS = {
+  checking: "Checking…",
+  connected: "Connected",
+  connectTitle: "Connect ElevenLabs",
+  connectLine: "Paste your ElevenLabs API key. Agents then make voices, sound effects and music on your ElevenLabs plan, not Genex credits.",
+  keyLine: (hint) => (hint ? `ElevenLabs API key ending in ${hint}` : "ElevenLabs API key"),
+  keyHelp: "Create a key at elevenlabs.io → Developers → API Keys.",
+  placeholder: "sk_…",
+  keyLabel: "ElevenLabs API key",
+  pasteFirst: "Paste your ElevenLabs API key first.",
+  disconnect: "Disconnect",
+  useSaved: "Use saved key",
+  noSavedKey: "No saved key yet. Paste one above.",
+  recent: "Recent files",
+};
+const capitalize = (value) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
+const STATS = (state) => [
+  ["Credits left", typeof state.limit === "number" ? count(state.limit - state.used) : undefined],
+  ["Plan", capitalize(state.tier)],
+];
+const NOTE = (state) =>
+  state.resetsAt
+    ? `Credits reset on ${DATE.format(new Date(state.resetsAt))}. Audio is paid from your ElevenLabs plan.`
+    : "Audio is paid from your ElevenLabs plan, not Genex credits.";
+const JOB_TITLE = (job) => job.text || job.operation;
+const JOB_DETAIL = (job) => (job.files ?? [])[0] ?? job.operation;
+
 const $ = (id) => document.getElementById(id);
-const ui = window.studioPlugin.ui;
 const call = (name, args) => window.studioPlugin.call("action", name, args ?? {});
+const NUMBER = new Intl.NumberFormat();
+const DATE = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 let generation = 0;
+let busy = false;
+
+/** Readable label colour on the accent: dark text on a light accent, white otherwise. */
+function labelOn(color) {
+  const probe = document.createElement("i");
+  probe.style.color = color;
+  document.body.append(probe);
+  const [r, g, b] = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g).map(Number);
+  probe.remove();
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 150 ? "#0e0d0f" : "#ffffff";
+}
+
+async function applyTheme() {
+  try {
+    const { theme } = await window.studioPlugin.call("context");
+    const root = document.documentElement.style;
+    if (theme.background) root.setProperty("--background", theme.background);
+    if (theme.foreground) root.setProperty("--foreground", theme.foreground);
+    if (theme.accent) {
+      root.setProperty("--accent", theme.accent);
+      root.setProperty("--accent-foreground", labelOn(theme.accent));
+    }
+  } catch {}
+}
+
+const text = (value) => document.createTextNode(String(value ?? ""));
+
+function stat(label, value) {
+  const wrap = document.createElement("div");
+  wrap.className = "stat";
+  const dt = document.createElement("dt");
+  const dd = document.createElement("dd");
+  dt.textContent = label;
+  dd.textContent = value;
+  wrap.append(dt, dd);
+  return wrap;
+}
 
 function showError(error) {
   $("error").textContent = error ? String(error.message ?? error) : "";
 }
 
-function render(state) {
-  const account = $("account");
-  account.replaceChildren(ui.status("Account", state.connected ? "Connected" : "Not connected"));
-  if (state.tier) account.append(ui.status("Plan", state.tier));
-  if (state.limit !== undefined) account.append(ui.status("Credits used", `${state.used} / ${state.limit}`));
-  if (state.resetsAt) account.append(ui.status("Resets", state.resetsAt));
-  if (state.note) account.append(ui.text("p", state.note));
-  if (state.error) account.append(ui.error(state.error));
-  $("disconnect").hidden = !state.connected;
-  const jobs = state.jobs ?? [];
-  if (!jobs.length) return;
+function renderAccount(state) {
+  const connected = !!state.connected;
+  $("dot").hidden = !connected;
+  $("dot").dataset.tone = state.error ? "warn" : "";
+  $("heading").textContent = connected ? WORDS.connected : WORDS.connectTitle;
+  $("subtitle").textContent = connected ? WORDS.keyLine(state.keyHint) : WORDS.connectLine;
+  $("key-form").hidden = connected;
+  $("disconnect").hidden = !connected;
+  const stats = connected ? STATS(state).filter(([, value]) => value !== undefined && value !== null) : [];
+  $("stats").replaceChildren(...stats.map(([label, value]) => stat(label, value)));
+  $("stats").hidden = stats.length === 0;
+  $("note").textContent = connected ? (state.note ?? NOTE(state)) : WORDS.keyHelp;
+  showError(state.error);
+}
+
+function renderJobs(jobs) {
+  $("recent").hidden = jobs.length === 0;
   $("jobs").replaceChildren(
     ...jobs.map((job) => {
-      const card = document.createElement("article");
-      card.append(ui.text("strong", job.operation), ui.status("Created", job.createdAt));
-      if (job.text) card.append(ui.status("Text", job.text));
-      for (const file of job.files ?? []) card.append(ui.text("div", file));
-      return card;
+      const item = document.createElement("li");
+      item.className = "job";
+      const title = document.createElement("strong");
+      title.append(text(JOB_TITLE(job)));
+      title.title = title.textContent;
+      const time = document.createElement("time");
+      time.dateTime = job.createdAt;
+      time.textContent = DATE.format(new Date(job.createdAt));
+      const detail = document.createElement("code");
+      detail.textContent = JOB_DETAIL(job);
+      detail.title = detail.textContent;
+      item.append(title, time, detail);
+      return item;
     }),
   );
 }
@@ -148,36 +344,65 @@ async function refresh() {
   const mine = ++generation;
   try {
     const state = await call("status");
-    if (mine === generation) {
-      render(state);
-      showError("");
-    }
+    if (mine !== generation) return;
+    renderAccount(state);
+    renderJobs(state.jobs ?? []);
   } catch (error) {
     if (mine === generation) showError(error);
   }
 }
 
-$("save").onclick = async () => {
-  const token = $("key").value.trim();
-  if (!token) return showError("Paste your ElevenLabs API key first.");
+async function run(button, work) {
+  if (busy) return;
+  busy = true;
+  button.disabled = true;
+  showError("");
   try {
+    await work();
+  } catch (error) {
+    showError(error);
+  } finally {
+    busy = false;
+    button.disabled = false;
+  }
+}
+
+$("heading").textContent = WORDS.checking;
+$("key").placeholder = WORDS.placeholder;
+$("key").setAttribute("aria-label", WORDS.keyLabel);
+$("disconnect").textContent = WORDS.disconnect;
+$("unlock").textContent = WORDS.useSaved;
+$("recent-title").textContent = WORDS.recent;
+
+$("save").onclick = () =>
+  run($("save"), async () => {
+    const token = $("key").value.trim();
+    if (!token) throw new Error(WORDS.pasteFirst);
     await call("connect", { token });
     $("key").value = "";
     await refresh();
-  } catch (error) {
-    showError(error);
-  }
+  });
+// After a restart the saved key stays locked until the user asks for it.
+$("unlock").onclick = () =>
+  run($("unlock"), async () => {
+    const answer = await call("connect");
+    if (!answer?.connected) throw new Error(WORDS.noSavedKey);
+    await refresh();
+  });
+$("key").onkeydown = (event) => {
+  if (event.key === "Enter") $("save").click();
 };
-$("refresh").onclick = refresh;
-$("disconnect").onclick = async () => {
-  try {
+$("disconnect").onclick = () =>
+  run($("disconnect"), async () => {
     await call("disconnect");
     await refresh();
-  } catch (error) {
-    showError(error);
-  }
-};
-const stop = window.studioPlugin.onContextChanged(refresh);
+  });
+
+const stop = window.studioPlugin.onContextChanged(() => {
+  applyTheme();
+  refresh();
+});
 window.addEventListener("pagehide", stop);
+applyTheme();
 refresh();
 </script>
