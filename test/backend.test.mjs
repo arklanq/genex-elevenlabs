@@ -138,6 +138,7 @@ test("hostile names, voices and formats are refused before anything is sent or w
     [{ operation: "speech", text: "hi", voice: "../../v1/user" }, /voiceId/],
     [{ operation: "speech", text: "hi", voice: VOICE, options: { output_format: "mp3_44100&x=1" } }, /output_format/],
     [{ operation: "sfx", prompt: "x", options: { output_format: "pcm_16000" } }, /output_format/],
+    [{ operation: "sfx", prompt: "x", options: { output_format: "mp3" } }, /output_format/],
     [{ operation: "speech", text: "hi" }, /needs text and voice/],
     [{ operation: "music" }, /needs a prompt/],
     [{ operation: "clone" }, /Unknown operation/],

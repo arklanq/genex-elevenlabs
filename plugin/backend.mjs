@@ -118,7 +118,7 @@ function parseOptions(value) {
 function outputFormat(value) {
   const format = String(value ?? DEFAULT_FORMAT);
   const extension = FORMAT_EXTENSIONS[/** @type {keyof typeof FORMAT_EXTENSIONS} */ (format.split("_")[0])];
-  if (!extension || !/^[a-z0-9_]+$/.test(format)) throw new Error(MESSAGE.BadFormat);
+  if (!extension || !/^[a-z0-9]+_[a-z0-9_]+$/.test(format)) throw new Error(MESSAGE.BadFormat);
   return { format, extension };
 }
 
