@@ -27,19 +27,21 @@
         "type": "object",
         "properties": {
           "search": {
-            "type": "string"
+            "type": "string",
+            "description": "Words to match in voice names and descriptions; leave out to list the first voices."
           }
         }
       }
     },
     {
       "name": "generate",
-      "description": "Make one audio file with the user's own ElevenLabs plan and copy it into the game. Operations: speech (needs text and voice, a voiceId from elevenlabs__voices), sfx (needs prompt; options.duration_seconds 0.5-30, options.loop), music (needs prompt; options.music_length_ms 3000-600000, options.force_instrumental). name is the file name without extension. options holds other ElevenLabs API fields such as model_id, voice_settings, language_code, seed, prompt_influence and output_format (mp3_*, wav_* or opus_*; default mp3_44100_128). Returns the delivered file path.",
+      "description": "Make one audio file with the user's own ElevenLabs plan and copy it into the game. Operations: speech (needs text and voice, a voiceId from elevenlabs__voices), sfx (needs prompt; options.duration_seconds 0.5-30, options.loop), music (needs prompt; options.music_length_ms 3000-600000, options.force_instrumental). name is the file name without extension. options holds other ElevenLabs API fields such as model_id, voice_settings, language_code, seed, prompt_influence and output_format (mp3_*, wav_* or opus_*; default mp3_44100_128). Returns jobId and files, the delivered paths relative to the game.",
       "parameters": {
         "type": "object",
         "properties": {
           "operation": {
-            "type": "string"
+            "type": "string",
+            "description": "speech, sfx or music."
           },
           "text": {
             "type": "string",
