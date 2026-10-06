@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm test
+      # The tag must name the version Studio will read from plugin.json.
+      - name: Check the tag matches plugin.json
+        run: |
+          id=$(node -p 'require("./plugin/plugin.json").id')
+          version=$(node -p 'require("./plugin/plugin.json").version')
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match plugin.json version $version."
+            exit 1
+          fi
+          echo "PACKAGE=$id-$version" >> "$GITHUB_ENV"
+      # The zip holds one folder to choose in Load local plugin…, without the editor-only files.
+      - name: Build the package
+        run: |
+          mkdir -p dist/stage
+          cp -R plugin "dist/stage/$PACKAGE"
+          rm -rf "dist/stage/$PACKAGE/jsconfig.json" "dist/stage/$PACKAGE/plugin-sdk"
+          (cd dist/stage && zip -rX "../$PACKAGE.zip" "$PACKAGE")
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "dist/$PACKAGE.zip" --title "$GITHUB_REF_NAME" --generate-notes
