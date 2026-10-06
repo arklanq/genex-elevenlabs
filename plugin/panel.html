@@ -249,10 +249,13 @@ const WORDS = {
   useSaved: "Use saved key",
   noSavedKey: "No saved key yet. Paste one above.",
 };
-const capitalize = (value) => (value ? value[0].toUpperCase() + value.slice(1) : undefined);
+/** ElevenLabs reports its plan as a code; the codes whose spelled-out name is not obvious. */
+const PLAN_NAMES = { payg: "Pay as you go", growing_business: "Growing Business" };
+const planName = (tier) =>
+  tier ? (PLAN_NAMES[tier] ?? tier.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())) : undefined;
 const STATS = (state) => [
   ["Credits left", typeof state.limit === "number" ? count(state.limit - state.used) : undefined],
-  ["Plan", capitalize(state.tier)],
+  ["Plan", planName(state.tier)],
 ];
 const NOTE = (state) =>
   state.resetsAt
