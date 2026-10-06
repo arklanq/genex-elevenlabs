@@ -33,5 +33,5 @@ npm test
 Check the package with Genex's doctor from a genex-desktop checkout:
 
 ```bash
-npm run plugin:doctor -- /path/to/genex-elevenlabs-plugin/plugin
+npm run plugin:doctor -- /path/to/genex-elevenlabs/plugin
 ```
