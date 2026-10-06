@@ -274,11 +274,11 @@ function labelOn(color) {
   const probe = document.createElement("i");
   probe.style.color = color;
   document.body.append(probe);
-  const color = getComputedStyle(probe).color;
+  const computed = getComputedStyle(probe).color;
   probe.remove();
   // Only rgb() gives 0–255 channels; for wider colour spaces keep the white label.
-  if (!color.startsWith("rgb")) return "#ffffff";
-  const [r, g, b] = color.match(/\d+(\.\d+)?/g).map(Number);
+  if (!computed.startsWith("rgb")) return "#ffffff";
+  const [r, g, b] = computed.match(/\d+(\.\d+)?/g).map(Number);
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 150 ? "#0e0d0f" : "#ffffff";
 }
 
