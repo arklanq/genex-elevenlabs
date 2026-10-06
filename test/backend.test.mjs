@@ -216,3 +216,18 @@ test("a redirect never carries the key to another host", async () => {
     );
   }
 });
+
+test("a key with characters a header cannot carry is refused without echoing it", async () => {
+  const requests = fakeElevenLabs();
+  const { ctx, state } = fakeHost(root, game, null);
+  const plugin = await activate(/** @type {any} */ ({}));
+  for (const token of ["sk_se\ncret", "sk_se cret", "sk_se\u2026cret"]) {
+    await assert.rejects(plugin.action("connect", { token }, ctx), (error) => {
+      assert.match(error.message, /does not look like an ElevenLabs API key/);
+      assert.doesNotMatch(error.message, /cret/);
+      return true;
+    });
+  }
+  assert.equal(requests.length, 0);
+  assert.equal(state.saved, null);
+});
