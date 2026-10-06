@@ -254,7 +254,7 @@ const PLAN_NAMES = { payg: "Pay as you go", growing_business: "Growing Business"
 const planName = (tier) =>
   tier ? (PLAN_NAMES[tier] ?? tier.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())) : undefined;
 const STATS = (state) => [
-  ["Credits left", typeof state.limit === "number" ? count(state.limit - state.used) : undefined],
+  ["Credits left", typeof state.limit === "number" && typeof state.used === "number" ? count(state.limit - state.used) : undefined],
   ["Plan", planName(state.tier)],
 ];
 const NOTE = (state) =>
@@ -274,8 +274,11 @@ function labelOn(color) {
   const probe = document.createElement("i");
   probe.style.color = color;
   document.body.append(probe);
-  const [r, g, b] = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g).map(Number);
+  const color = getComputedStyle(probe).color;
   probe.remove();
+  // Only rgb() gives 0–255 channels; for wider colour spaces keep the white label.
+  if (!color.startsWith("rgb")) return "#ffffff";
+  const [r, g, b] = color.match(/\d+(\.\d+)?/g).map(Number);
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 150 ? "#0e0d0f" : "#ffffff";
 }
 
