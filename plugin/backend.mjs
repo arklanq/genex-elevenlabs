@@ -203,9 +203,13 @@ async function generate(ctx, key, args) {
   const jobId = randomUUID();
   const dir = path.join(String(await ctx.host("storage.root")), "downloads", jobId);
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, `${name}${extension}`), bytes);
-  const files = await ctx.host("assets.deliver", { output: dir, jobId });
-  await rm(dir, { recursive: true, force: true });
+  let files;
+  try {
+    await writeFile(path.join(dir, `${name}${extension}`), bytes);
+    files = await ctx.host("assets.deliver", { output: dir, jobId });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
   const entry = {
     jobId,
     operation: args.operation,

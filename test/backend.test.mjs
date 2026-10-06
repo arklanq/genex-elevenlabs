@@ -9,7 +9,7 @@ const AUDIO = new Uint8Array([73, 68, 51, 4]);
 const VOICE = "JBFqnCBsd6RMkjVDRZzb";
 
 /** A fake Studio host that keeps jobs and the key in memory and copies deliveries into the game. */
-function fakeHost(root, game, key = "sk_test") {
+function fakeHost(root, game, key = "sk_test", { deliverError } = {}) {
   const jobs = new Map();
   const state = { key, saved: key };
   const host = async (method, args) => {
@@ -32,6 +32,7 @@ function fakeHost(root, game, key = "sk_test") {
         jobs.set(args.id, structuredClone(args.value));
         return true;
       case "assets.deliver": {
+        if (deliverError) throw new Error(deliverError);
         const target = path.join(game, "assets", "elevenlabs", args.jobId);
         await mkdir(target, { recursive: true });
         const files = (await readdir(args.output)).sort();
@@ -262,4 +263,12 @@ test("an answer without a length stops being read once it passes the size cap", 
   await assert.rejects(plugin.tool("generate", { operation: "sfx", prompt: "x" }, ctx), /larger than 100 MiB/);
   assert.ok(pulled <= 102, `read ${pulled} MiB`);
   await assert.rejects(readdir(path.join(root, "downloads")), { code: "ENOENT" });
+});
+
+test("a failed delivery removes the staging copy", async () => {
+  fakeElevenLabs();
+  const { ctx } = fakeHost(root, game, "sk_test", { deliverError: "Asset exceeds the limit" });
+  const plugin = await activate(/** @type {any} */ ({}));
+  await assert.rejects(plugin.tool("generate", { operation: "sfx", prompt: "x" }, ctx), /Asset exceeds/);
+  assert.deepEqual(await readdir(path.join(root, "downloads")), []);
 });
