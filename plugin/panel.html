@@ -101,10 +101,32 @@ input::placeholder { color: var(--ink-3); }
 .stat dt { color: var(--ink-3); font-size: 13px; line-height: 18px; }
 .note { margin-block-start: 12px; color: var(--ink-3); font-size: 13px; line-height: 18px; text-wrap: pretty; }
 .error { margin-block-start: 12px; color: var(--red); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
-@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+/* Until the first status arrives the card waits off screen and a spinner shows the panel is loading. */
+.spinner {
+  position: fixed;
+  top: 48px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border: 2px solid var(--line);
+  border-top-color: var(--ink-3);
+  border-radius: 999px;
+  animation: spin 800ms linear infinite;
+}
+.card { opacity: 0; transform: translateY(8px); }
+body[data-ready] .card { opacity: 1; transform: none; transition: opacity 240ms ease-out, transform 240ms ease-out; }
+body[data-ready] .spinner { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+  .spinner { animation-duration: 2400ms; }
+  .card { transform: none; }
+}
 @media (max-width: 420px) { .card { padding: 16px; } }
 </style>
 
+<div class="spinner" id="spinner" role="status" aria-label="Loading"></div>
 <section class="card" aria-live="polite" aria-labelledby="title">
   <div class="row">
     <div class="copy">
@@ -306,7 +328,15 @@ async function refresh() {
     renderAccount(state);
   } catch (error) {
     if (mine === generation) showError(error);
+  } finally {
+    if (mine === generation) reveal();
   }
+}
+
+/** Swap the spinner for the card once, after the first answer or failure. */
+function reveal() {
+  document.body.dataset.ready = "";
+  $("spinner").removeAttribute("role");
 }
 
 async function run(button, work) {
