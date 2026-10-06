@@ -5,6 +5,6 @@
   "description": "Genex Studio plugin that makes voices, sound effects and music with your own ElevenLabs API key.",
   "type": "module",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test"
   }
 }
