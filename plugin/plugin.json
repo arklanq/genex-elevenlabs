@@ -76,7 +76,7 @@
   "panels": [
     {
       "id": "account",
-      "title": "ElevenLabs",
+      "title": "Configuration",
       "file": "panel.html",
       "placement": "settings"
     }
