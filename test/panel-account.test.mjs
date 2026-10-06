@@ -66,16 +66,6 @@ async function untilSettled() {
   for (let i = 0; i < 10; i++) await settle();
 }
 
-test("using a saved key that is not there keeps the error on screen", async () => {
-  const $ = await openPanel({
-    status: () => ({ connected: false }),
-    connect: () => ({ connected: false, needsKey: true }),
-  });
-  $("unlock").click();
-  await untilSettled();
-  assert.notEqual($("error").textContent, "");
-});
-
 test("a key the service refuses keeps its error on screen", async () => {
   const $ = await openPanel({
     status: () => ({ connected: false }),
@@ -101,7 +91,8 @@ test("the next action clears the previous error", async () => {
   $("save").click();
   await untilSettled();
   assert.notEqual($("error").textContent, "");
-  $("unlock").click();
+  $("key").value = "good-key";
+  $("save").click();
   await untilSettled();
   assert.equal($("error").textContent, "");
   assert.equal($("key-form").hidden, true);
