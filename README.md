@@ -16,7 +16,7 @@ Files are copied into the game under `assets/elevenlabs/<id>/<name>.mp3` (`publi
 
 1. In Genex: **Plugins → Add → Load local plugin…** and choose the `plugin/` folder.
 2. Press **Connect** on the ElevenLabs row, paste your key from elevenlabs.io (Developers → API Keys) and press **Save key**. The plugin checks the key with ElevenLabs before Studio saves it. A key restricted so it cannot read the plan is still accepted; the panel then shows no credit use.
-3. After a restart, press **Connect** again to unlock the saved key.
+3. Studio unlocks the saved key again after a restart. If the panel asks for a key instead, press **Use saved key**.
 
 ## Limits
 
