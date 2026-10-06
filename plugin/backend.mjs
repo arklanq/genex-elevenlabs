@@ -145,14 +145,22 @@ function request(args, options) {
 }
 
 /**
- * Read an audio answer, refusing one over the size cap.
+ * Read an audio answer, refusing one over the size cap as soon as it passes it.
  * @param {Response} response
  */
 async function audioBytes(response) {
   if (Number(response.headers.get("content-length") ?? 0) > MAX_AUDIO_BYTES) throw new Error(MESSAGE.TooLarge);
-  const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.length > MAX_AUDIO_BYTES) throw new Error(MESSAGE.TooLarge);
-  return bytes;
+  if (!response.body) return Buffer.alloc(0);
+  /** @type {Uint8Array[]} */
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+    size += chunk.length;
+    // Leaving the loop early cancels the stream, so the rest is never downloaded.
+    if (size > MAX_AUDIO_BYTES) throw new Error(MESSAGE.TooLarge);
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 /** Serialize index writes so concurrent calls do not drop each other. */

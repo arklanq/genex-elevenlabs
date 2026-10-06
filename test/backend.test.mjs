@@ -50,7 +50,7 @@ function fakeHost(root, game, key = "sk_test") {
  * Route fetch to canned ElevenLabs answers. Like real fetch, it stops on an aborted signal and
  * follows a `redirect` to its target, keeping the headers, unless the call asked to refuse redirects.
  */
-function fakeElevenLabs({ subscription = { status: 200 }, redirect } = {}) {
+function fakeElevenLabs({ subscription = { status: 200 }, redirect, audio } = {}) {
   const requests = [];
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
@@ -61,6 +61,7 @@ function fakeElevenLabs({ subscription = { status: 200 }, redirect } = {}) {
       requests.push({ url: new URL(redirect), method: init.method ?? "GET", key: init.headers?.["xi-api-key"] });
       return Response.json({});
     }
+    if (audio && url.pathname !== "/v1/user/subscription") return new Response(audio());
     if (url.pathname === "/v1/user/subscription") {
       if (subscription.status !== 200)
         return new Response(JSON.stringify({ detail: subscription.detail }), { status: subscription.status });
@@ -242,4 +243,23 @@ test("stopping the turn ends the free calls too", async () => {
   const plugin = await activate(/** @type {any} */ ({}));
   await assert.rejects(plugin.tool("voices", {}, stopped), { name: "AbortError" });
   assert.match((await plugin.tool("status", {}, stopped)).error, /abort/i);
+});
+
+test("an answer without a length stops being read once it passes the size cap", async () => {
+  const chunk = new Uint8Array(1024 * 1024);
+  let pulled = 0;
+  const audio = () =>
+    new ReadableStream({
+      pull(controller) {
+        pulled += 1;
+        if (pulled > 120) controller.close();
+        else controller.enqueue(chunk);
+      },
+    });
+  fakeElevenLabs({ audio });
+  const { ctx } = fakeHost(root, game);
+  const plugin = await activate(/** @type {any} */ ({}));
+  await assert.rejects(plugin.tool("generate", { operation: "sfx", prompt: "x" }, ctx), /larger than 100 MiB/);
+  assert.ok(pulled <= 102, `read ${pulled} MiB`);
+  await assert.rejects(readdir(path.join(root, "downloads")), { code: "ENOENT" });
 });
