@@ -33,11 +33,11 @@ function fakeHost(root, game, key = "sk_test", { deliverError } = {}) {
         return true;
       case "assets.deliver": {
         if (deliverError) throw new Error(deliverError);
-        const target = path.join(game, "assets", "elevenlabs", args.jobId);
+        const target = path.join(game, "assets", "arklanq-elevenlabs", args.jobId);
         await mkdir(target, { recursive: true });
         const files = (await readdir(args.output)).sort();
         for (const f of files) await copyFile(path.join(args.output, f), path.join(target, f));
-        return files.map((f) => `assets/elevenlabs/${args.jobId}/${f}`);
+        return files.map((f) => `assets/arklanq-elevenlabs/${args.jobId}/${f}`);
       }
       default:
         throw new Error(`unexpected host call ${method}`);
@@ -107,7 +107,7 @@ test("speech sends the text to the chosen voice and delivers the audio file into
   assert.deepEqual(call.body, { model_id: "eleven_v3", text: "Welcome, traveller." });
   assert.equal(call.key, "sk_test");
   assert.equal(result.files.length, 1);
-  assert.match(result.files[0], /^assets\/elevenlabs\/[a-f0-9-]{36}\/intro-line\.mp3$/);
+  assert.match(result.files[0], /^assets\/arklanq-elevenlabs\/[a-f0-9-]{36}\/intro-line\.mp3$/);
   assert.deepEqual(new Uint8Array(await readFile(path.join(game, result.files[0]))), AUDIO);
   assert.equal(result.characterCost, "42");
   assert.equal(jobs.get("index")[0].jobId, result.jobId);

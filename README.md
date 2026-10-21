@@ -11,9 +11,9 @@ A [Genex](https://github.com/genex-games/genex-desktop) plugin that makes speech
 
 | Tool | What it does |
 | --- | --- |
-| `elevenlabs__status` | Shows your account, credit usage and recent files. Free. |
-| `elevenlabs__voices` | Searches the voices you can use. Free. |
-| `elevenlabs__generate` | Makes one audio file (`speech`, `sfx` or `music`) in `assets/elevenlabs/`. Paid, and asks for consent each time. |
+| `arklanq-elevenlabs__status` | Shows your account, credit usage and recent files. Free. |
+| `arklanq-elevenlabs__voices` | Searches the voices you can use. Free. |
+| `arklanq-elevenlabs__generate` | Makes one audio file (`speech`, `sfx` or `music`) in `assets/arklanq-elevenlabs/`. Paid, and asks for consent each time. |
 
 ## Notes
 
@@ -34,4 +34,4 @@ npm run plugin:doctor -- /path/to/genex-elevenlabs/plugin
 
 ## Release
 
-Bump `version` in `plugin/plugin.json` and `package.json`, commit, then push a matching tag, such as `v0.2.0`. The workflow publishes a GitHub release with `elevenlabs-<version>.zip`.
+Bump `version` in `plugin/plugin.json` and `package.json`, commit, then push a matching tag, such as `v0.2.0`. The workflow publishes a GitHub release with `arklanq-elevenlabs-<version>.zip`.

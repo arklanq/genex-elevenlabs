@@ -1,6 +1,6 @@
 {
   "apiVersion": 3,
-  "id": "elevenlabs",
+  "id": "arklanq-elevenlabs",
   "version": "0.1.3",
   "name": "ElevenLabs",
   "publisher": "Arek Nurzyński",
@@ -22,7 +22,7 @@
     },
     {
       "name": "voices",
-      "description": "Search the voices this ElevenLabs account can use, by name or description. Free. Returns voiceId, name, category and labels; pass a voiceId to elevenlabs__generate for speech.",
+      "description": "Search the voices this ElevenLabs account can use, by name or description. Free. Returns voiceId, name, category and labels; pass a voiceId to arklanq-elevenlabs__generate for speech.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -35,7 +35,7 @@
     },
     {
       "name": "generate",
-      "description": "Make one audio file with the user's own ElevenLabs plan and copy it into the game. Operations: speech (needs text and voice, a voiceId from elevenlabs__voices), sfx (needs prompt; options.duration_seconds 0.5-30, options.loop), music (needs prompt; options.music_length_ms 3000-600000, options.force_instrumental). name is the file name without extension. options holds other ElevenLabs API fields such as model_id, voice_settings, language_code, seed, prompt_influence and output_format (mp3_*, wav_* or opus_*; default mp3_44100_128). Returns jobId and files, the delivered paths relative to the game.",
+      "description": "Make one audio file with the user's own ElevenLabs plan and copy it into the game. Operations: speech (needs text and voice, a voiceId from arklanq-elevenlabs__voices), sfx (needs prompt; options.duration_seconds 0.5-30, options.loop), music (needs prompt; options.music_length_ms 3000-600000, options.force_instrumental). name is the file name without extension. options holds other ElevenLabs API fields such as model_id, voice_settings, language_code, seed, prompt_influence and output_format (mp3_*, wav_* or opus_*; default mp3_44100_128). Returns jobId and files, the delivered paths relative to the game.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -73,7 +73,7 @@
   "skills": [
     {
       "name": "elevenlabs",
-      "text": "ElevenLabs makes speech, sound effects and music with the user's own ElevenLabs API key and plan. Call elevenlabs__status first; when connected is false, tell the user once to press Connect on the ElevenLabs plugin and paste a key, and do not block other work. For speech, pick a voice with elevenlabs__voices and pass its voiceId. Use elevenlabs__generate only for audio the game really needs, keep sound effects short and give each file a clear name. Every call asks the user first; a declined or expired request must not be repeated unless the user asks again. A failed call never needs a retry just in case: read its error first. Load the exact returned file in the game and check that it plays. Respect explicit user choices such as Genex credits or no generated audio; never switch between paid services silently."
+      "text": "ElevenLabs makes speech, sound effects and music with the user's own ElevenLabs API key and plan. Call arklanq-elevenlabs__status first; when connected is false, tell the user once to press Connect on the ElevenLabs plugin and paste a key, and do not block other work. For speech, pick a voice with arklanq-elevenlabs__voices and pass its voiceId. Use arklanq-elevenlabs__generate only for audio the game really needs, keep sound effects short and give each file a clear name. Every call asks the user first; a declined or expired request must not be repeated unless the user asks again. A failed call never needs a retry just in case: read its error first. Load the exact returned file in the game and check that it plays. Respect explicit user choices such as Genex credits or no generated audio; never switch between paid services silently."
     }
   ],
   "panels": [

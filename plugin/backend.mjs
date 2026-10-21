@@ -33,7 +33,7 @@ const MESSAGE = {
   Locked: "The ElevenLabs key is locked or not set. Open Plugins → ElevenLabs and press Connect.",
   ProjectRequired: "Open a game first.",
   UnknownOperation: (op) => `Unknown operation ${op}. Use ${Object.values(Operation).join(", ")}.`,
-  TextRequired: "speech needs text and voice (a voiceId from elevenlabs__voices).",
+  TextRequired: "speech needs text and voice (a voiceId from arklanq-elevenlabs__voices).",
   PromptRequired: (op) => `${op} needs a prompt.`,
   BadVoice: "voice must be a voiceId such as JBFqnCBsd6RMkjVDRZzb.",
   BadName: "name must be lowercase letters, digits and dashes, at most 40 characters.",
