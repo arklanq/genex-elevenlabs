@@ -13,7 +13,7 @@ A [Genex](https://github.com/genex-games/genex-desktop) plugin that makes speech
 | --- | --- |
 | `arklanq-elevenlabs__status` | Shows your account, credit usage and recent files. Free. |
 | `arklanq-elevenlabs__voices` | Searches the voices you can use. Free. |
-| `arklanq-elevenlabs__generate` | Makes one audio file (`speech`, `sfx` or `music`) in `assets/arklanq-elevenlabs/`. Paid, and asks for consent each time. |
+| `arklanq-elevenlabs__generate` | Makes one audio file in `assets/arklanq-elevenlabs/`: speech, a sound effect or music (the `speech`, `sfx` or `music` operation). Paid, and asks for consent each time. |
 
 ## Notes
 
