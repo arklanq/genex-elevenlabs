@@ -225,15 +225,24 @@ test("a key with characters a header cannot carry is refused without echoing it"
   const requests = fakeElevenLabs();
   const { ctx, state } = fakeHost(root, game, null);
   const plugin = await activate(/** @type {any} */ ({}));
-  for (const token of ["sk_se\ncret", "sk_se cret", "sk_se\u2026cret"]) {
+  for (const token of ["sk_se\ncret", "sk_se\u2026cret"]) {
     await assert.rejects(plugin.action("connect", { token }, ctx), (error) => {
-      assert.match(error.message, /does not look like an ElevenLabs API key/);
+      assert.match(error.message, /cannot be sent to ElevenLabs/);
       assert.doesNotMatch(error.message, /cret/);
       return true;
     });
   }
   assert.equal(requests.length, 0);
   assert.equal(state.saved, null);
+});
+
+test("a key of any shape is checked by ElevenLabs, not by the plugin", async () => {
+  const requests = fakeElevenLabs();
+  const { ctx, state } = fakeHost(root, game, null);
+  const plugin = await activate(/** @type {any} */ ({}));
+  assert.equal((await plugin.action("connect", { token: "new format" }, ctx)).connected, true);
+  assert.ok(requests.length > 0);
+  assert.equal(state.saved, "new format");
 });
 
 test("stopping the turn ends the free calls too", async () => {

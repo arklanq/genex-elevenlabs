@@ -20,8 +20,6 @@ const DEFAULT_FORMAT = "mp3_44100_128";
 /** Formats a browser game can play, by codec prefix, with their file extension. */
 const FORMAT_EXTENSIONS = { mp3: ".mp3", wav: ".wav", opus: ".opus" };
 const FILE_NAME = /^[a-z0-9][a-z0-9-]{0,39}$/;
-/** A key a header can carry: printable ASCII without spaces. */
-const KEY_SHAPE = /^[\x21-\x7e]+$/;
 /** ElevenLabs answers a valid key that lacks one permission with this status. */
 const MISSING_PERMISSIONS = "missing_permissions";
 
@@ -38,7 +36,7 @@ const MESSAGE = {
   BadVoice: "voice must be a voiceId such as JBFqnCBsd6RMkjVDRZzb.",
   BadName: "name must be lowercase letters, digits and dashes, at most 40 characters.",
   BadFormat: "output_format must start with mp3_, wav_ or opus_.",
-  BadKey: "That does not look like an ElevenLabs API key. Copy it again from elevenlabs.io.",
+  BadKey: "This key cannot be sent to ElevenLabs. Copy it again from elevenlabs.io.",
   BadOptions: "options must be a JSON object.",
   TooLarge: "The ElevenLabs answer is larger than 100 MiB.",
   NoPermission: "This key cannot read the plan; generation may still work.",
@@ -76,14 +74,25 @@ function describe(detail) {
 }
 
 /**
+ * Refuse a key no HTTP header can carry: fetch's own error for such a header quotes the value.
+ * @param {string} key
+ */
+function assertSendable(key) {
+  try {
+    new Headers({ key });
+  } catch {
+    throw new Error(MESSAGE.BadKey);
+  }
+}
+
+/**
  * Call ElevenLabs and return the raw response, or throw its own message.
  * @param {string} key
  * @param {string} route
  * @param {RequestInit} [init]
  */
 async function elevenlabs(key, route, init = {}) {
-  // fetch's own error for a bad header value quotes the value, so the key is checked first.
-  if (!KEY_SHAPE.test(key)) throw new Error(MESSAGE.BadKey);
+  assertSendable(key);
   const response = await fetch(`${API}${route}`, {
     ...init,
     headers: { "xi-api-key": key, ...init.headers },
