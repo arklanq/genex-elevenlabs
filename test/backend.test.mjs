@@ -245,6 +245,15 @@ test("a key of any shape is checked by ElevenLabs, not by the plugin", async () 
   assert.equal(state.saved, "new format");
 });
 
+test("connect trims white space pasted around the key", async () => {
+  const requests = fakeElevenLabs();
+  const { ctx, state } = fakeHost(root, game, null);
+  const plugin = await activate(/** @type {any} */ ({}));
+  assert.equal((await plugin.action("connect", { token: " \tsk_pasted\n" }, ctx)).connected, true);
+  assert.equal(requests.at(-1).key, "sk_pasted");
+  assert.equal(state.saved, "sk_pasted");
+});
+
 test("stopping the turn ends the free calls too", async () => {
   fakeElevenLabs();
   const { ctx } = fakeHost(root, game);
