@@ -6,6 +6,11 @@
   "publisher": "Arek Nurzyński",
   "description": "Make voices, sound effects and music with your own ElevenLabs API key and plan, not Genex credits.",
   "icon": "icon.svg",
+  "setup": [
+    "Create an API key at elevenlabs.io under Developers, then API Keys.",
+    "In Genex, open the plugin's Configuration, paste the key and press Connect.",
+    "Audio is paid from your ElevenLabs plan, not from Genex credits. Music needs a paid plan."
+  ],
   "backend": "backend.mjs",
   "capabilities": ["credentials", "network", "jobs", "project.write"],
   "network": {
